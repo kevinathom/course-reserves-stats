@@ -5,6 +5,8 @@ format: html
 server: shiny
 ---
 
+# Demonstration template
+
 ## Shiny Documents
 
 This Quarto document is made interactive using Shiny. Interactive documents allow readers to modify parameters and see the results immediately. Learn more about Shiny interactive documents at <https://quarto.org/docs/interactive/shiny/>.
@@ -28,4 +30,42 @@ output$distPlot <- renderPlot({
         xlab = 'Waiting time to next eruption (in mins)',
         main = 'Histogram of waiting times')
 })
+```
+
+# New work
+
+```{r}
+# Penn colors
+colors_penn <- data.frame(name = 'hex')
+```
+
+```{r}
+# Load data
+dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv')
+#Replace hard-coded filepath with a dynamic selector in a GUI
+```
+
+## Summary by item
+
+```{r}
+# Number of student views by item (table)
+#Values: Sum of column values
+#Rows: Citation
+#Columns: Course enrollment, Files downloaded, File views, Full text views, Total views
+#Static filters: User role = 'Student'
+#User-selectable filters: Course year, Course term, Course code
+```
+
+```{r}
+# Percent of student views by item (bar chart)
+#Values: Sum of Total views divided by sum of Course enrollment
+#Categories: Citation
+#Static filters: User role = 'Student'
+#User-selectable filters (linked to the table above): Course year, Course term, Course code
+```
+
+## Summary by term
+
+```{r}
+
 ```
