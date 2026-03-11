@@ -35,6 +35,11 @@ output$distPlot <- renderPlot({
 # Course Reserves Statistics
 
 ```{r}
+# Dependencies
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+
 # Penn colors
 colors_penn <- list(primary = c('011f5b', '990000'),
                     secondary = c('3479be', 'aa755', 'bbd86b', 'bd60a5'),
@@ -45,17 +50,34 @@ colors_penn <- list(primary = c('011f5b', '990000'),
 # Load data
 dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv')
 #Replace hard-coded filepath with a dynamic selector in a GUI
+dat$Citation <- as.character(dat$Citation)
+```
+
+```{r}
+# Specify Course.code values
+course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
+#Replace hard-coded Course.code values a multi-select GUI that lists available unique Course.code values
 ```
 
 ## Summary by item
 
 ```{r}
+#User-selectable filters: Course year, Course term for the by-item section only
+```
+
+```{r}
 # Number of student views by item (table)
-#Values: Sum of column values
-#Rows: Citation
-#Columns: Max of Course enrollment, Files downloaded, File views, Full text views, Total views
-#Static filters: User role = 'Student'
-#User-selectable filters: Course year, Course term, Course code
+dat_temp <- dat |>
+  filter(Course.code %in% course_codes & User.role == 'Student') |>
+  group_by(Citation) |>
+  summarize(Enrollment = max(Course.enrollment),
+            Files_downloaded = sum(Files.downloaded),
+            File_views = sum(File.views),
+            Full_text_views = sum(Full.text.views),
+            All_views = sum(Total.views)
+            )
+
+kable(dat_temp)
 ```
 
 ```{r}
