@@ -76,16 +76,14 @@ dat_temp <- dat |>
             Full_text_views = sum(Full.text.views),
             All_views = sum(Total.views)
             )
-
 kable(dat_temp)
 ```
 
 ```{r}
-# Percent of student views by item (bar chart)
-#Values: (Sum of Total views) divided by (max of Course enrollment)
-#Categories: Citation
-#Static filters: User role = 'Student'
-#User-selectable filters (shared with the table above): Course year, Course term, Course code
+# Percent of student views (relative to enrollment) by item (bar chart)
+ggplot(dat_temp,
+       aes(x = All_views / Enrollment, y = Citation)) +
+  geom_col()
 ```
 
 ## Summary by term
