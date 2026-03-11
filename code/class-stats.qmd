@@ -32,11 +32,13 @@ output$distPlot <- renderPlot({
 })
 ```
 
-# New work
+# Course Reserves Statistics
 
 ```{r}
 # Penn colors
-colors_penn <- data.frame(name = 'hex')
+colors_penn <- list(primary = c('011f5b', '990000'),
+                    secondary = c('3479be', 'aa755', 'bbd86b', 'bd60a5'),
+                    gray = c('555d6a', '757f8f', 'a7aeba', 'e1e4ec'))
 ```
 
 ```{r}
@@ -51,21 +53,34 @@ dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-
 # Number of student views by item (table)
 #Values: Sum of column values
 #Rows: Citation
-#Columns: Course enrollment, Files downloaded, File views, Full text views, Total views
+#Columns: Max of Course enrollment, Files downloaded, File views, Full text views, Total views
 #Static filters: User role = 'Student'
 #User-selectable filters: Course year, Course term, Course code
 ```
 
 ```{r}
 # Percent of student views by item (bar chart)
-#Values: Sum of Total views divided by sum of Course enrollment
+#Values: (Sum of Total views) divided by (max of Course enrollment)
 #Categories: Citation
 #Static filters: User role = 'Student'
-#User-selectable filters (linked to the table above): Course year, Course term, Course code
+#User-selectable filters (shared with the table above): Course year, Course term, Course code
 ```
 
 ## Summary by term
 
 ```{r}
+# Number of student views by term (table)
+#Values: Sum of column values
+#Rows: Combination of 'Course year' and 'Course term'
+#Columns: Max of 'Course enrollment' per 'Course code', count of unique 'Course code', 'Files downloaded', 'File views', 'Full text views', 'Total views'
+#Static filters: 'User role' = 'Student'
+#User-selectable filters: 'Course code'
+```
 
+```{r}
+# Percent of student views by term (bar chart)
+#Values: (Sum of 'Total views') divided by (sum of (max of 'Course enrollment' per 'Course code'))
+#Categories: Combination of 'Course year' and 'Course term'
+#Static filters: 'User role' = 'Student'
+#User-selectable filters (shared with the table above): 'Course code'
 ```
