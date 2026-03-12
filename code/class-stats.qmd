@@ -1,6 +1,10 @@
 ---
 title: "Course Reserves Statistics"
 author: "Kevin A Thomas"
+execute: 
+  echo: false
+  warning: false
+  error: false
 format: html
 server: shiny
 ---
@@ -41,9 +45,9 @@ library(ggplot2)
 library(kableExtra)
 
 # Penn colors
-colors_penn <- list(primary = c('011f5b', '990000'),
-                    secondary = c('3479be', 'aa755', 'bbd86b', 'bd60a5'),
-                    gray = c('555d6a', '757f8f', 'a7aeba', 'e1e4ec'))
+colors_penn <- list(primary = c('#011f5b', '#990000'),
+                    secondary = c('#3479be', '#faa755', '#bbd86b', '#bd60a5'),
+                    gray = c('#555d6a', '#757f8f', '#a7aeba', '#e1e4ec'))
 ```
 
 ```{r}
@@ -66,25 +70,47 @@ course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_P
 ```
 
 ```{r}
-# Number of student views by item (table)
+# Total student views by item (table)
 dat_temp <- dat |>
   filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
-  summarize(Enrollment = max(Course.enrollment),
-            Files_downloaded = sum(Files.downloaded),
-            File_views = sum(File.views),
-            Full_text_views = sum(Full.text.views),
-            All_views = sum(Total.views)
+  summarize('Maximum enrollment' = max(Course.enrollment),
+            'Files downloaded' = sum(Files.downloaded),
+            'File views' = sum(File.views),
+            'Full-text views' = sum(Full.text.views),
+            'All views' = sum(Total.views)
             )
-kable(dat_temp)
+kbl(dat_temp,
+    caption = 'Number of student views by item'
+    ) |>
+  kable_styling(c("striped", "hover"))
 ```
 
+
+
 ```{r}
-# Percent of student views (relative to enrollment) by item (bar chart)
+# Student views per enrollee by item (bar chart)
+dat_temp <- dat |>
+  filter(Course.code %in% course_codes & User.role == 'Student') |>
+  group_by(Citation) |>
+  summarize(Views.per.enrollee = sum(Total.views) / max(Course.enrollment))
 ggplot(dat_temp,
-       aes(x = All_views / Enrollment, y = Citation)) +
-  geom_col()
+       aes(x = Views.per.enrollee,
+           y = Citation
+           )
+       ) +
+  geom_col(fill = colors_penn$primary[1]) +
+  labs(title = 'Student views per enrollee',
+       x = 'Views per enrollee'
+       ) +
+  geom_text(aes(label = round(Views.per.enrollee, 2)),
+            color = 'white',
+            hjust = +1
+            ) +
+  theme_classic()
 ```
+
+We should discuss the calculation for views per enrollee (and whether there's a better approach) to ensure it makes sense. 
 
 ## Summary by term
 
