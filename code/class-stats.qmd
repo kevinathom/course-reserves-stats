@@ -58,15 +58,17 @@ dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
-# Specify Course.code values
+# Specify Course.code values (apply to all content)
 course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
-#Replace hard-coded Course.code values a multi-select GUI that lists available unique Course.code values
+#course_codes <- unique(dat$Course.code)
+#OR
+#Replace hard-coded course_codes with a multi-select GUI that lists available unique Course.code values
 ```
 
 ## Summary by item
 
 ```{r}
-#User-selectable filters: Course year, Course term for the by-item section only
+#User-selectable filters (apply to Summary by item section content only): Course year, Course term for the by-item section only
 ```
 
 ```{r}
@@ -116,17 +118,45 @@ We should discuss the calculation for views per enrollee (and whether there's a 
 
 ```{r}
 # Number of student views by term (table)
-#Values: Sum of column values
-#Rows: Combination of 'Course year' and 'Course term'
-#Columns: Max of 'Course enrollment' per 'Course code', count of unique 'Course code', 'Files downloaded', 'File views', 'Full text views', 'Total views'
-#Static filters: 'User role' = 'Student'
-#User-selectable filters: 'Course code'
+dat_temp <- dat |>
+  filter(Course.code %in% course_codes & User.role == 'Student') |>
+  group_by(Course.year, Course.term) |>
+  summarize(Courses = length(unique(Course.code)),
+            Items = length(unique(Citation)),
+            'Maximum enrollment' = max(Course.enrollment),
+            'Minimum enrollment' = min(Course.enrollment),
+            'Files downloaded' = sum(Files.downloaded),
+            'File views' = sum(File.views),
+            'Full-text views' = sum(Full.text.views),
+            'All views' = sum(Total.views)
+            )
+names(dat_temp)[c(1,2)] <- c('Course year', 'Course term')
+kbl(dat_temp,
+    caption = 'Number of student views by term'
+    ) |>
+  kable_styling(c("striped", "hover"))
 ```
 
 ```{r}
-# Percent of student views by term (bar chart)
-#Values: (Sum of 'Total views') divided by (sum of (max of 'Course enrollment' per 'Course code'))
-#Categories: Combination of 'Course year' and 'Course term'
-#Static filters: 'User role' = 'Student'
-#User-selectable filters (shared with the table above): 'Course code'
+# Student views per citation by term (bar chart)
+dat_temp <- dat |>
+  filter(Course.code %in% course_codes & User.role == 'Student') |>
+  group_by(Course.year, Course.term) |>
+  summarize(Views.per.citation = sum(Total.views) / length(unique(Citation)))
+ggplot(dat_temp,
+       aes(x = Views.per.citation,
+           y = paste(Course.year, Course.term)
+           )
+       ) +
+  geom_col(fill = colors_penn$primary[1]) +
+  labs(title = 'Student views per citation',
+       x = 'Views per citation'
+       ) +
+  geom_text(aes(label = round(Views.per.citation, 2)),
+            color = 'white',
+            hjust = +1
+            ) +
+  theme_classic()
 ```
+
+We should discuss these calculations too.
