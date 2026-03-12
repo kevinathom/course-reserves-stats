@@ -1,6 +1,7 @@
 ---
 title: "Course Reserves Statistics"
 author: "Kevin A Thomas"
+date: today
 execute: 
   echo: false
   warning: false
@@ -46,16 +47,21 @@ course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_P
 dat_temp <- dat |>
   filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
-  summarize('Maximum enrollment' = max(Course.enrollment),
-            'Files downloaded' = sum(Files.downloaded),
-            'File views' = sum(File.views),
-            'Full-text views' = sum(Full.text.views),
-            'All views' = sum(Total.views)
+  summarize('Maximum\nenrollment' = max(Course.enrollment),
+            'Files\ndownloaded' = sum(Files.downloaded),
+            'File\nviews' = sum(File.views),
+            'Full-text\nviews' = sum(Full.text.views),
+            'All\nviews' = sum(Total.views)
             )
 kbl(dat_temp,
-    caption = 'Number of student views by item'
+    format = 'latex',
+    caption = 'Number of student views by item',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE
     ) |>
-  kable_styling(c("striped", "hover"))
+  kable_styling(c('striped', 'hover'),
+                latex_options = 'HOLD_position'
+                )
 ```
 
 
@@ -93,18 +99,23 @@ dat_temp <- dat |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
             Items = length(unique(Citation)),
-            'Maximum enrollment' = max(Course.enrollment),
-            'Minimum enrollment' = min(Course.enrollment),
-            'Files downloaded' = sum(Files.downloaded),
-            'File views' = sum(File.views),
-            'Full-text views' = sum(Full.text.views),
-            'All views' = sum(Total.views)
+            'Maximum\nenrollment' = max(Course.enrollment),
+            'Minimum\nenrollment' = min(Course.enrollment),
+            'Files\ndownloaded' = sum(Files.downloaded),
+            'File\nviews' = sum(File.views),
+            'Full-text\nviews' = sum(Full.text.views),
+            'All\nviews' = sum(Total.views)
             )
-names(dat_temp)[c(1,2)] <- c('Course year', 'Course term')
+names(dat_temp)[c(1,2)] <- c('Course\nyear', 'Course\nterm')
 kbl(dat_temp,
-    caption = 'Number of student views by term'
+    format = 'latex',
+    caption = 'Number of student views by term',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE
     ) |>
-  kable_styling(c("striped", "hover"))
+  kable_styling(c('striped', 'hover'),
+                latex_options = 'HOLD_position'
+                )
 ```
 
 ```{r}
@@ -120,7 +131,8 @@ ggplot(dat_temp,
        ) +
   geom_col(fill = colors_penn$primary[1]) +
   labs(title = 'Student views per citation',
-       x = 'Views per citation'
+       x = 'Views per citation',
+       y = 'Term'
        ) +
   geom_text(aes(label = round(Views.per.citation, 2)),
             color = 'white',
