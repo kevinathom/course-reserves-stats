@@ -36,18 +36,35 @@ course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_P
 #Replace hard-coded course_codes with a multi-select GUI that lists available unique Course.code values
 ```
 
+Currently, this file takes all of the course reserves data and filters it
+
+1. By a fixed list of course codes.
+1. By the user role Student.
+
+We could replace the fixed course codes list with a dynamic set of course codes. This would require either
+
+- Easier option: Pre-filtering the data to just the relevant courses.
+- Harder option: An interactive menu (with a long list of every course code).
+
 ## Summary by item
 
 ```{r}
 #User-selectable filters (apply to Summary by item section content only): Course year, Course term for the by-item section only
 ```
 
+To consider:
+
+- What type(s) of enrollment stat(s) are meaningful?
+- Are the types of views important or only the total?
+
 ```{r}
 # Total student views by item (table)
 dat_temp <- dat |>
   filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
-  summarize('Maximum\nenrollment' = max(Course.enrollment),
+  summarize(Courses = length(unique(Course.code)),
+            'Maximum\nenrollment' = max(Course.enrollment),
+            'Minimum\nenrollment' = min(Course.enrollment),
             'Files\ndownloaded' = sum(Files.downloaded),
             'File\nviews' = sum(File.views),
             'Full-text\nviews' = sum(Full.text.views),
@@ -64,22 +81,28 @@ kbl(dat_temp,
                 )
 ```
 
+Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n())
 
+To consider:
+
+- Is this calculation right?
+- Would a different rate be more useful?
 
 ```{r}
 # Student views per enrollee by item (bar chart)
 dat_temp <- dat |>
   filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
-  summarize(Views.per.enrollee = sum(Total.views) / max(Course.enrollment))
+  summarize(Views.per.enrollee = sum(Total.views) / (sum(Course.enrollment) / n())
+            )
 ggplot(dat_temp,
        aes(x = Views.per.enrollee,
            y = Citation
            )
        ) +
   geom_col(fill = colors_penn$primary[1]) +
-  labs(title = 'Student views per enrollee',
-       x = 'Views per enrollee'
+  labs(title = 'ALl views per student and course',
+       x = 'View rate'
        ) +
   geom_text(aes(label = round(Views.per.enrollee, 2)),
             color = 'white',
@@ -88,9 +111,12 @@ ggplot(dat_temp,
   theme_classic()
 ```
 
-We should discuss the calculation for views per enrollee (and whether there's a better approach) to ensure it makes sense. 
-
 ## Summary by term
+
+To consider:
+
+- What type(s) of enrollment stat(s) are meaningful?
+- Are the types of views important or only the total?
 
 ```{r}
 # Number of student views by term (table)
@@ -118,20 +144,28 @@ kbl(dat_temp,
                 )
 ```
 
+Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n() / length(unique(Citation)))
+
+To consider:
+
+- Is this calculation right?
+- Would a different rate be more useful?
+
 ```{r}
 # Student views per citation by term (bar chart)
 dat_temp <- dat |>
   filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Course.year, Course.term) |>
-  summarize(Views.per.citation = sum(Total.views) / length(unique(Citation)))
+  summarize(Views.per.citation = sum(Total.views) / (sum(Course.enrollment) / n() / length(unique(Citation)))
+            )
 ggplot(dat_temp,
        aes(x = Views.per.citation,
            y = paste(Course.year, Course.term)
            )
        ) +
   geom_col(fill = colors_penn$primary[1]) +
-  labs(title = 'Student views per citation',
-       x = 'Views per citation',
+  labs(title = 'Views per student and item',
+       x = 'View rate',
        y = 'Term'
        ) +
   geom_text(aes(label = round(Views.per.citation, 2)),
@@ -141,4 +175,7 @@ ggplot(dat_temp,
   theme_classic()
 ```
 
-We should discuss these calculations too.
+To consider:
+
+- What should we remove?
+- What are we missing?
