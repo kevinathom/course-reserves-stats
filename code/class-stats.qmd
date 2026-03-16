@@ -85,7 +85,7 @@ Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n())
 
 To consider:
 
-- Is this calculation right?
+- I doubt this calculation is right. I'm still playing with options for a meaningful and calculable use rate.
 - Would a different rate be more useful?
 
 ```{r}
@@ -148,7 +148,7 @@ Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n() / leng
 
 To consider:
 
-- Is this calculation right?
+- I doubt this calculation is right. I'm still playing with options for a meaningful and calculable use rate.
 - Would a different rate be more useful?
 
 ```{r}
