@@ -12,7 +12,7 @@ format: pdf
 ```{r}
 # Dependencies
 library(dplyr)
-library(ggplot2)
+#library(ggplot2)
 library(kableExtra)
 
 # Penn colors
@@ -30,50 +30,39 @@ dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
-# Specify Course.code values (apply to all content)
+# Filter data (applies to all content)
 #course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
-course_codes <- unique(dat$Course.code)
-#OR
-#Replace hard-coded course_codes with a multi-select GUI that lists available unique Course.code values
+course_codes <- unique(dat$Course.code) # redundant if data are pre-filtered
+dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
 ```
 
-Currently, this file takes all of the course reserves data and filters it
+These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`.
 
-1. By a fixed list of course codes.
-1. By the user role Student.
+Note: Data do not include any readings that were not viewed.
 
-We could replace the fixed course codes list with a dynamic set of course codes. This would require either
-
-- Easier option: Pre-filtering the data to just the relevant courses.
-- Harder option: An interactive menu (with a long list of every course code).
-
-## Summary by item
+## Summary by viewed item
 
 ```{r}
 #User-selectable filters (apply to Summary by item section content only): Course year, Course term for the by-item section only
 ```
 
-To consider:
+To do:
 
-- What type(s) of enrollment stat(s) are meaningful?
-- Are the types of views important or only the total?
+- Fix if chart is longer than the page
+- 
 
 ```{r}
 # Total student views by item (table)
 dat_temp <- dat |>
-  filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
   summarize(Courses = length(unique(Course.code)),
-            'Maximum\nenrollment' = max(Course.enrollment),
             'Minimum\nenrollment' = min(Course.enrollment),
-            'Files\ndownloaded' = sum(Files.downloaded),
-            'File\nviews' = sum(File.views),
-            'Full-text\nviews' = sum(Full.text.views),
-            'All\nviews' = sum(Total.views)
+            'Maximum\nenrollment' = max(Course.enrollment),
+            Views = sum(Total.views)
             )
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Number of student views by item',
+    caption = 'Number of student views by viewed item',
     col.names = linebreak(names(dat_temp)),
     escape = FALSE
     ) |>
@@ -84,15 +73,15 @@ kbl(dat_temp,
 
 Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n())
 
-To consider:
+To try:
 
-- I doubt this calculation is right. I'm still playing with options for a meaningful and calculable use rate.
-- Would a different rate be more useful?
+- A list of items with under 1 view per student
+- Top 5 and bottom 5 items by view rate
 
 ```{r}
+#| eval: false
 # Student views per enrollee by item (bar chart)
 dat_temp <- dat |>
-  filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Citation) |>
   summarize(Views.per.enrollee = sum(Total.views) / (sum(Course.enrollment) / n())
             )
@@ -114,24 +103,15 @@ ggplot(dat_temp,
 
 ## Summary by term
 
-To consider:
-
-- What type(s) of enrollment stat(s) are meaningful?
-- Are the types of views important or only the total?
-
 ```{r}
 # Number of student views by term (table)
 dat_temp <- dat |>
-  filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
-            Items = length(unique(Citation)),
-            'Maximum\nenrollment' = max(Course.enrollment),
+            'Viewed\nitems\ = length(unique(Citation)),
             'Minimum\nenrollment' = min(Course.enrollment),
-            'Files\ndownloaded' = sum(Files.downloaded),
-            'File\nviews' = sum(File.views),
-            'Full-text\nviews' = sum(Full.text.views),
-            'All\nviews' = sum(Total.views)
+            'Maximum\nenrollment' = max(Course.enrollment),
+            Views = sum(Total.views)
             )
 names(dat_temp)[c(1,2)] <- c('Course\nyear', 'Course\nterm')
 kbl(dat_temp,
@@ -145,17 +125,10 @@ kbl(dat_temp,
                 )
 ```
 
-Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n() / length(unique(Citation)))
-
-To consider:
-
-- I doubt this calculation is right. I'm still playing with options for a meaningful and calculable use rate.
-- Would a different rate be more useful?
-
 ```{r}
+#| eval: false
 # Student views per citation by term (bar chart)
 dat_temp <- dat |>
-  filter(Course.code %in% course_codes & User.role == 'Student') |>
   group_by(Course.year, Course.term) |>
   summarize(Views.per.citation = sum(Total.views) / (sum(Course.enrollment) / n() / length(unique(Citation)))
             )
@@ -176,7 +149,12 @@ ggplot(dat_temp,
   theme_classic()
 ```
 
-To consider:
+## Views by date
 
-- What should we remove?
-- What are we missing?
+Could show whether students spaced out their readings or crammed before an exam. Include this only as needed.
+
+```{r}
+# Histogram
+
+```
+
