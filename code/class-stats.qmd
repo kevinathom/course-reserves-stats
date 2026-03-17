@@ -23,15 +23,16 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 
 ```{r}
 # Load data
-dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv')
+#dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv')
+dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv')
 #Replace hard-coded filepath with a dynamic selector in a GUI
 dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
 # Specify Course.code values (apply to all content)
-course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
-#course_codes <- unique(dat$Course.code)
+#course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
+course_codes <- unique(dat$Course.code)
 #OR
 #Replace hard-coded course_codes with a multi-select GUI that lists available unique Course.code values
 ```
