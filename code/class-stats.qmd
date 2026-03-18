@@ -12,7 +12,6 @@ format: pdf
 ```{r}
 # Dependencies
 library(dplyr)
-#library(ggplot2)
 library(kableExtra)
 
 # Penn colors
@@ -108,7 +107,7 @@ ggplot(dat_temp,
 dat_temp <- dat |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
-            'Viewed\nitems\ = length(unique(Citation)),
+            'Viewed\nitems' = length(unique(Citation)),
             'Minimum\nenrollment' = min(Course.enrollment),
             'Maximum\nenrollment' = max(Course.enrollment),
             Views = sum(Total.views)
@@ -151,10 +150,41 @@ ggplot(dat_temp,
 
 ## Views by date
 
-Could show whether students spaced out their readings or crammed before an exam. Include this only as needed.
+```{r}
+# Hard-code presets for histogram
+presets <- list(
+  Term = c('Spring'),
+  Year = c('2025'),
+  Event = c('2025-04-05')
+)
+```
+
+Include this only as needed.
+
+To do:
+
+- Interpolate missing dates.
+- Adjust vertical date label position so it's next to the line.
 
 ```{r}
-# Histogram
-
+# Views by date (histogram)
+library(ggplot2)
+dat_temp <- dat |>
+  filter(Course.term %in% presets$Term & Course.year %in% presets$Year) |>
+  group_by(Event.date) |>
+  summarize(Views = sum(Total.views))
+ggplot(dat_temp,
+       aes(x = Event.date,
+           y = Views
+           )
+       ) +
+  geom_col(fill = colors_penn$primary[1]) +
+  geom_vline(xintercept = presets$Event, linetype = "dashed", color = colors_penn$primary[2], size = .5) +
+  annotate('text', x = presets$Event, y = 0, label = presets$Event, color = "black", hjust = -2.5, angle = 90) +
+  scale_x_discrete(breaks = dat_temp$Event.date[seq(1, nrow(dat_temp), by = 14)]) +
+  labs(title = 'Views by date',
+       x = 'Date'
+       ) +
+  theme_classic()
 ```
 
