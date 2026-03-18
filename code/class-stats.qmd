@@ -37,7 +37,7 @@ dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
 
 These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`.
 
-Note: Data do not include any readings that were not viewed.
+Note: Data do not include readings that were not viewed.
 
 ## Summary by viewed item
 
@@ -47,8 +47,9 @@ Note: Data do not include any readings that were not viewed.
 
 To do:
 
-- Fix if chart is longer than the page
-- 
+- Fix if chart is longer than the page--'scale_down' seems to ignore the bottom margin
+- Sorting by rate seems not to work
+- Fix histogram label spacing
 
 ```{r}
 # Total student views by item (table)
@@ -58,7 +59,8 @@ dat_temp <- dat |>
             'Minimum\nenrollment' = min(Course.enrollment),
             'Maximum\nenrollment' = max(Course.enrollment),
             Views = sum(Total.views)
-            )
+            ) |>
+  arrange(Citation)
 kbl(dat_temp,
     format = 'latex',
     caption = 'Number of student views by viewed item',
@@ -66,16 +68,45 @@ kbl(dat_temp,
     escape = FALSE
     ) |>
   kable_styling(c('striped', 'hover'),
-                latex_options = 'HOLD_position'
+                latex_options = c('HOLD_position', 'scale_down')
                 )
 ```
-
-Calculation: View rate = sum(Total.views) / (sum(Course.enrollment) / n())
 
 To try:
 
 - A list of items with under 1 view per student
 - Top 5 and bottom 5 items by view rate
+
+```{r}
+# Most- and least-viewed items (table)
+dat_temp <- dat |>
+  group_by(Citation, Course.code) |>
+  summarize(Enrollment = median(Course.enrollment),
+            Views = sum(Total.views)
+            ) |>
+  group_by(Citation) |>
+  summarize(Courses = length(unique(Course.code)),
+            'Median\nenrollment' = median(Enrollment),
+            Views = sum(Views),
+            'View\nrate' = sum(Views) / sum(Enrollment)
+            ) |>
+  arrange(desc('View\nrate'))
+if(nrow(dat_temp) > 10){
+  dat_temp <- rbind(dat_temp[1:5, ],
+                    rep("...", ncol(dat_temp)),
+                    dat_temp[(nrow(dat_temp)-4):nrow(dat_temp), ]
+                    )
+}
+kbl(dat_temp,
+    format = 'latex',
+    caption = 'Most-viewed and least-viewed (non-zero) items',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE
+    ) |>
+  kable_styling(c('striped', 'hover'),
+                latex_options = c('HOLD_position', 'scale_down')
+                )
+```
 
 ```{r}
 #| eval: false
@@ -111,7 +142,8 @@ dat_temp <- dat |>
             'Minimum\nenrollment' = min(Course.enrollment),
             'Maximum\nenrollment' = max(Course.enrollment),
             Views = sum(Total.views)
-            )
+            ) |>
+  arrange(Course.year, Course.term)
 names(dat_temp)[c(1,2)] <- c('Course\nyear', 'Course\nterm')
 kbl(dat_temp,
     format = 'latex',
@@ -120,7 +152,7 @@ kbl(dat_temp,
     escape = FALSE
     ) |>
   kable_styling(c('striped', 'hover'),
-                latex_options = 'HOLD_position'
+                latex_options = c('HOLD_position', 'scale_down')
                 )
 ```
 
@@ -159,7 +191,7 @@ presets <- list(
 )
 ```
 
-Include this only as needed.
+Include this section only as needed.
 
 To do:
 
