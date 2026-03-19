@@ -29,10 +29,15 @@ dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
-# Filter data (applies to all content)
-#course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
-course_codes <- unique(dat$Course.code) # redundant if data are pre-filtered
+#| eval: false
+# Filter data (applies to all content) in file with all data
+course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
 dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
+```
+
+```{r}
+# Filter data (applies to all content) in pre-filtered file
+dat <- filter(dat, User.role == 'Student')
 ```
 
 These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`.
@@ -72,11 +77,6 @@ kbl(dat_temp,
                 )
 ```
 
-To try:
-
-- A list of items with under 1 view per student
-- Top 5 and bottom 5 items by view rate
-
 ```{r}
 # Most- and least-viewed items (table)
 dat_temp <- dat |>
@@ -88,9 +88,9 @@ dat_temp <- dat |>
   summarize(Courses = length(unique(Course.code)),
             'Median\nenrollment' = median(Enrollment),
             Views = sum(Views),
-            'View\nrate' = sum(Views) / sum(Enrollment)
+            'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
             ) |>
-  arrange(desc('View\nrate'))
+  arrange(desc(`Views per\nstudent`), .by_group = FALSE)
 if(nrow(dat_temp) > 10){
   dat_temp <- rbind(dat_temp[1:5, ],
                     rep("...", ncol(dat_temp)),
@@ -99,7 +99,37 @@ if(nrow(dat_temp) > 10){
 }
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Most-viewed and least-viewed (non-zero) items',
+    caption = 'Most-viewed and least-viewed items with views',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE
+    ) |>
+  kable_styling(c('striped', 'hover'),
+                latex_options = c('HOLD_position', 'scale_down')
+                )
+```
+```{r}
+# Seldom-viewed items (table)
+dat_temp <- dat |>
+  group_by(Citation, Course.code) |>
+  summarize(Enrollment = median(Course.enrollment),
+            Views = sum(Total.views)
+            ) |>
+  group_by(Citation) |>
+  summarize(Courses = length(unique(Course.code)),
+            'Median\nenrollment' = median(Enrollment),
+            Views = sum(Views),
+            'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
+            ) |>
+  filter(`Views per\nstudent` < 1) |>
+  arrange(desc(`Views per\nstudent`), .by_group = FALSE)
+if(nrow(dat_temp) == 0){
+  dat_temp <- rbind(dat_temp,
+                    rep("N/A", ncol(dat_temp))
+                    )
+}
+kbl(dat_temp,
+    format = 'latex',
+    caption = 'Viewed items with under one view per student',
     col.names = linebreak(names(dat_temp)),
     escape = FALSE
     ) |>
