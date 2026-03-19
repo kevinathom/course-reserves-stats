@@ -44,17 +44,17 @@ These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Eve
 
 Note: Data do not include readings that were not viewed.
 
+## To do
+
+- Fix if chart is longer than the page--'scale_down' seems to ignore the bottom margin
+- Fix inline handling of nexted backquotes
+- Fix histogram label spacing
+
 ## Summary by viewed item
 
 ```{r}
 #User-selectable filters (apply to Summary by item section content only): Course year, Course term for the by-item section only
 ```
-
-To do:
-
-- Fix if chart is longer than the page--'scale_down' seems to ignore the bottom margin
-- Sorting by rate seems not to work
-- Fix histogram label spacing
 
 ```{r}
 # Total student views by item (table)
@@ -78,8 +78,8 @@ kbl(dat_temp,
 ```
 
 ```{r}
-# Most- and least-viewed items (table)
-dat_temp <- dat |>
+# Prepare view rates
+dat_rate <- dat |>
   group_by(Citation, Course.code) |>
   summarize(Enrollment = median(Course.enrollment),
             Views = sum(Total.views)
@@ -91,6 +91,11 @@ dat_temp <- dat |>
             'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
             ) |>
   arrange(desc(`Views per\nstudent`), .by_group = FALSE)
+```
+
+```{r}
+# Most- and least-viewed items (table)
+dat_temp <- dat_rate
 if(nrow(dat_temp) > 10){
   dat_temp <- rbind(dat_temp[1:5, ],
                     rep("...", ncol(dat_temp)),
@@ -107,21 +112,12 @@ kbl(dat_temp,
                 latex_options = c('HOLD_position', 'scale_down')
                 )
 ```
+
+``{r} nrow(dat_rate |> filter(`Views per\nstudent` < 1))`` items had fewer than one view per student.
+
 ```{r}
-# Seldom-viewed items (table)
-dat_temp <- dat |>
-  group_by(Citation, Course.code) |>
-  summarize(Enrollment = median(Course.enrollment),
-            Views = sum(Total.views)
-            ) |>
-  group_by(Citation) |>
-  summarize(Courses = length(unique(Course.code)),
-            'Median\nenrollment' = median(Enrollment),
-            Views = sum(Views),
-            'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
-            ) |>
-  filter(`Views per\nstudent` < 1) |>
-  arrange(desc(`Views per\nstudent`), .by_group = FALSE)
+# Under-viewed items (table)
+dat_temp <- dat_rate |> filter(`Views per\nstudent` < 1)
 if(nrow(dat_temp) == 0){
   dat_temp <- rbind(dat_temp,
                     rep("N/A", ncol(dat_temp))
@@ -129,7 +125,7 @@ if(nrow(dat_temp) == 0){
 }
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Viewed items with under one view per student',
+    caption = 'Items students viewed rarely',
     col.names = linebreak(names(dat_temp)),
     escape = FALSE
     ) |>
