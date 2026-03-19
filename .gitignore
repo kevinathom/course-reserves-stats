@@ -1,6 +1,9 @@
 # Data files
 /res/*
 
+# Rendered outputs
+/code/*.pdf
+/code/*.html
 
 ## R
 
