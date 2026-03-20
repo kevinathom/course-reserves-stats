@@ -11,10 +11,15 @@ opts_chunk:
     knitr.table.html.attr: "quarto-disable-processing=true"
 format:
   pdf:
+    mainfont: "Arial"
+    sansfont: "Arial"
+    monofont: "Courier New"
     include-in-header:
       text: |
         \usepackage{caption}
         \captionsetup[table]{labelformat=empty}
+        \captionsetup[figure]{labelformat=empty}
+fig-cap-location: top
 ---
 
 ```{r}
@@ -55,7 +60,7 @@ Note: Data do not include readings that were not viewed.
 ## To do
 
 - Interpolate missing dates in time series chart.
-- Remove table numbering.
+- Improve theming
 
 ## Summary by viewed item
 
@@ -228,7 +233,7 @@ presets <- list(
 ```
 
 ```{r}
-# Views by date (histogram)
+#| fig-cap: "Number of views by date"
 library(ggplot2)
 dat_temp <- dat |>
   filter(Course.term %in% presets$Term & Course.year %in% presets$Year) |>
@@ -243,9 +248,7 @@ ggplot(dat_temp,
   geom_vline(xintercept = presets$Event, linetype = "dashed", color = colors_penn$primary[2], size = .5) +
   annotate('text', x = presets$Event, y = 0, label = presets$Event, color = "black", hjust = -1.5, angle = 90) +
   scale_x_discrete(breaks = dat_temp$Event.date[seq(1, nrow(dat_temp), by = 7*3)]) +
-  labs(title = 'Views by date',
-       x = 'Date'
-       ) +
-  theme_classic()
+  labs(x = 'Date') +
+  theme_classic(base_family = "sans")
 ```
 
