@@ -6,6 +6,9 @@ execute:
   echo: false
   warning: false
   error: false
+opts_chunk: 
+    R.options: 
+    knitr.table.html.attr: "quarto-disable-processing=true"
 format: pdf
 ---
 
@@ -46,8 +49,8 @@ Note: Data do not include readings that were not viewed.
 
 ## To do
 
-- Fix if chart is longer than the page--'scale_down' seems to ignore the bottom margin
-- Fix histogram label spacing
+- Interpolate missing dates in time series chart.
+- Remove table numbering.
 
 ## Summary by viewed item
 
@@ -56,7 +59,7 @@ Note: Data do not include readings that were not viewed.
 ```
 
 ```{r}
-# Total student views by item (table)
+#| tbl-cap: "Number of student views by viewed item"
 dat_temp <- dat |>
   group_by(Citation) |>
   summarize(Courses = length(unique(Course.code)),
@@ -67,12 +70,12 @@ dat_temp <- dat |>
   arrange(Citation)
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Number of student views by viewed item',
     col.names = linebreak(names(dat_temp)),
-    escape = FALSE
+    escape = FALSE,
+    longtable = TRUE
     ) |>
-  kable_styling(c('striped', 'hover'),
-                latex_options = c('HOLD_position', 'scale_down')
+  kable_styling(c('striped'),
+                latex_options = c('HOLD_position', 'repeat_header')
                 )
 ```
 
@@ -94,7 +97,7 @@ ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1))
 ```
 
 ```{r}
-# Most- and least-viewed items (table)
+#| tbl-cap: "Most-viewed and least-viewed items with views"
 dat_temp <- dat_rate
 if(nrow(dat_temp) > 10){
   dat_temp <- rbind(dat_temp[1:5, ],
@@ -104,19 +107,19 @@ if(nrow(dat_temp) > 10){
 }
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Most-viewed and least-viewed items with views',
     col.names = linebreak(names(dat_temp)),
-    escape = FALSE
+    escape = FALSE,
+    longtable = TRUE
     ) |>
-  kable_styling(c('striped', 'hover'),
-                latex_options = c('HOLD_position', 'scale_down')
+  kable_styling(c('striped'),
+                latex_options = c('HOLD_position', 'repeat_header')
                 )
 ```
 
 `{r} ct_under_1` items had fewer than one view per student.
 
 ```{r}
-# Under-viewed items (table)
+#| tbl-cap: "Under-viewed items"
 dat_temp <- dat_rate |> filter(`Views per\nstudent` < 1)
 if(nrow(dat_temp) == 0){
   dat_temp <- rbind(dat_temp,
@@ -125,12 +128,12 @@ if(nrow(dat_temp) == 0){
 }
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Items students viewed rarely',
     col.names = linebreak(names(dat_temp)),
-    escape = FALSE
+    escape = FALSE,
+    longtable = TRUE
     ) |>
-  kable_styling(c('striped', 'hover'),
-                latex_options = c('HOLD_position', 'scale_down')
+  kable_styling(c('striped'),
+                latex_options = c('HOLD_position', 'repeat_header')
                 )
 ```
 
@@ -160,7 +163,7 @@ ggplot(dat_temp,
 ## Summary by term
 
 ```{r}
-# Number of student views by term (table)
+#| tbl-cap: "Number of student views by term"
 dat_temp <- dat |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
@@ -173,12 +176,12 @@ dat_temp <- dat |>
 names(dat_temp)[c(1,2)] <- c('Course\nyear', 'Course\nterm')
 kbl(dat_temp,
     format = 'latex',
-    caption = 'Number of student views by term',
     col.names = linebreak(names(dat_temp)),
-    escape = FALSE
+    escape = FALSE,
+    longtable = TRUE
     ) |>
-  kable_styling(c('striped', 'hover'),
-                latex_options = c('HOLD_position', 'scale_down')
+  kable_styling(c('striped'),
+                latex_options = c('HOLD_position', 'repeat_header')
                 )
 ```
 
@@ -206,7 +209,9 @@ ggplot(dat_temp,
   theme_classic()
 ```
 
-## Views by date
+{{< pagebreak >}}
+
+## Views by date (as needed)
 
 ```{r}
 # Hard-code presets for histogram
@@ -216,13 +221,6 @@ presets <- list(
   Event = c('2025-04-05')
 )
 ```
-
-Include this section only as needed.
-
-To do:
-
-- Interpolate missing dates.
-- Adjust vertical date label position so it's next to the line.
 
 ```{r}
 # Views by date (histogram)
@@ -238,8 +236,8 @@ ggplot(dat_temp,
        ) +
   geom_col(fill = colors_penn$primary[1]) +
   geom_vline(xintercept = presets$Event, linetype = "dashed", color = colors_penn$primary[2], size = .5) +
-  annotate('text', x = presets$Event, y = 0, label = presets$Event, color = "black", hjust = -2.5, angle = 90) +
-  scale_x_discrete(breaks = dat_temp$Event.date[seq(1, nrow(dat_temp), by = 14)]) +
+  annotate('text', x = presets$Event, y = 0, label = presets$Event, color = "black", hjust = -1.5, angle = 90) +
+  scale_x_discrete(breaks = dat_temp$Event.date[seq(1, nrow(dat_temp), by = 7*3)]) +
   labs(title = 'Views by date',
        x = 'Date'
        ) +
