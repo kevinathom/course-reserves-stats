@@ -47,7 +47,6 @@ Note: Data do not include readings that were not viewed.
 ## To do
 
 - Fix if chart is longer than the page--'scale_down' seems to ignore the bottom margin
-- Fix inline handling of nexted backquotes
 - Fix histogram label spacing
 
 ## Summary by viewed item
@@ -91,6 +90,7 @@ dat_rate <- dat |>
             'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
             ) |>
   arrange(desc(`Views per\nstudent`), .by_group = FALSE)
+ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1))
 ```
 
 ```{r}
@@ -113,7 +113,7 @@ kbl(dat_temp,
                 )
 ```
 
-``{r} nrow(dat_rate |> filter(`Views per\nstudent` < 1))`` items had fewer than one view per student.
+`{r} ct_under_1` items had fewer than one view per student.
 
 ```{r}
 # Under-viewed items (table)
