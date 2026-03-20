@@ -53,14 +53,11 @@ dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
 dat <- filter(dat, User.role == 'Student')
 ```
 
-These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`.
-
-Note: Data do not include readings that were not viewed.
+These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`. Items that were viewed zero times do not appear here.
 
 ## To do
 
 - Interpolate missing dates in time series chart.
-- Improve theming
 
 ## Summary by viewed item
 
@@ -129,7 +126,7 @@ kbl(dat_temp,
 `{r} ct_under_1` items had fewer than one view per student.
 
 ```{r}
-#| tbl-cap: "Under-viewed items"
+#| tbl-cap: "Under-viewed items with views"
 dat_temp <- dat_rate |> filter(`Views per\nstudent` < 1)
 if(nrow(dat_temp) == 0){
   dat_temp <- rbind(dat_temp,
