@@ -9,7 +9,12 @@ execute:
 opts_chunk: 
     R.options: 
     knitr.table.html.attr: "quarto-disable-processing=true"
-format: pdf
+format:
+  pdf:
+    include-in-header:
+      text: |
+        \usepackage{caption}
+        \captionsetup[table]{labelformat=empty}
 ---
 
 ```{r}
@@ -59,7 +64,7 @@ Note: Data do not include readings that were not viewed.
 ```
 
 ```{r}
-#| tbl-cap: "Number of student views by viewed item"
+#| tbl-cap: "Number of views for each viewed item"
 dat_temp <- dat |>
   group_by(Citation) |>
   summarize(Courses = length(unique(Course.code)),
@@ -163,7 +168,7 @@ ggplot(dat_temp,
 ## Summary by term
 
 ```{r}
-#| tbl-cap: "Number of student views by term"
+#| tbl-cap: "Number of views by term"
 dat_temp <- dat |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
