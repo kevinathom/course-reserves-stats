@@ -34,27 +34,30 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-# Load data
-#dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv')
-dat <- read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv')
-#Replace hard-coded filepath with a dynamic selector in a GUI
+# Load and filter data (data file with all course codes)
+course_codes <- c('BAN_PUBH-5010-001 202610',
+                  'BAN_PUBH-5010-001 202520',
+                  'BAN_PUBH-5010-001 202510',
+                  'BAN_PUBH-5010-001 202430',
+                  'BAN_PUBH-5010-001 202420',
+                  'BAN_PUBH-5010-001 202410')
+dat <-
+  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv') |>
+  filter(Course.code %in% course_codes & User.role == 'Student')
 dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
 #| eval: false
-# Filter data (applies to all content) in file with all data
-course_codes <- c('BAN_PUBH-5010-001 202610', 'BAN_PUBH-5010-001 202520', 'BAN_PUBH-5010-001 202510', 'BAN_PUBH-5010-001 202430', 'BAN_PUBH-5010-001 202420', 'BAN_PUBH-5010-001 202410')
-dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
+# Load and filter data (data file with relevant course codes only)
+dat <-
+  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv') |>
+  filter(User.role == 'Student')
+dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
-# Filter data (applies to all content) in pre-filtered file
-dat <- filter(dat, User.role == 'Student')
-```
-
-```{r}
-# Check for multiple course terms
+# Concatenate key course terms
 term_min <- paste(dat$Course.term[dat$Event.date == min(dat$Event.date)][1],
                   dat$Course.year[dat$Event.date == min(dat$Event.date)][1])
 term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
@@ -66,10 +69,6 @@ These data cover courses from `{r} if (term_max == term_min) term_min else paste
 ## Summary by viewed item
 
 Items that were viewed zero times do not appear.
-
-```{r}
-#User-selectable filters (apply to Summary by item section content only): Course year, Course term for the by-item section only
-```
 
 ```{r}
 #| tbl-cap: "Number of views for each viewed item"
@@ -182,7 +181,7 @@ kbl(dat_temp,
 ## Views by date (as needed)
 
 ```{r}
-# Hard-code presets for histogram
+# Presets for histogram (hard-coded)
 presets <- list(
   Term = c('Spring'),
   Year = c('2025'),
