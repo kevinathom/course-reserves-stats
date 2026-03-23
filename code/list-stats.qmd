@@ -1,0 +1,31 @@
+---
+title: "Course Reserves Statistics"
+author: "Lippincott Library"
+date: today
+execute: 
+  echo: false
+  warning: false
+  error: false
+format: 
+  pptx:
+    reference-doc: "Lippincott Library Presentation Template 0525.potx"
+---
+
+```{r}
+# Dependencies
+library(dplyr)
+library(kableExtra)
+library(ggplot2)
+
+# Penn colors
+colors_penn <- list(primary = c('#011f5b', '#990000'),
+                    secondary = c('#3479be', '#faa755', '#bbd86b', '#bd60a5'),
+                    gray = c('#555d6a', '#757f8f', '#a7aeba', '#e1e4ec'))
+```
+
+## Items per list
+
+Number of items per list (n, mean, median), infographic-style
+
+## ??
+
