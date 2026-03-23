@@ -55,10 +55,6 @@ dat <- filter(dat, User.role == 'Student')
 
 These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`. Items that were viewed zero times do not appear here.
 
-## To do
-
-- Interpolate missing dates in time series chart.
-
 ## Summary by viewed item
 
 ```{r}
@@ -225,26 +221,44 @@ ggplot(dat_temp,
 presets <- list(
   Term = c('Spring'),
   Year = c('2025'),
-  Event = c('2025-04-05')
+  Event = as.Date(c('2025-04-05'))
 )
 ```
 
 ```{r}
 #| fig-cap: "Number of views by date"
 library(ggplot2)
+
+dates <- data.frame(Event.date = seq(from = as.Date(min(dat$Event.date)),
+                                     to = as.Date(max(dat$Event.date)),
+                                     by = "day"))
 dat_temp <- dat |>
   filter(Course.term %in% presets$Term & Course.year %in% presets$Year) |>
   group_by(Event.date) |>
   summarize(Views = sum(Total.views))
+dat_temp$Event.date <- as.Date(dat_temp$Event.date)
+dat_temp <- left_join(dates, dat_temp) |> mutate_if(is.numeric, coalesce, 0)
+
 ggplot(dat_temp,
        aes(x = Event.date,
            y = Views
            )
        ) +
   geom_col(fill = colors_penn$primary[1]) +
-  geom_vline(xintercept = presets$Event, linetype = "dashed", color = colors_penn$primary[2], size = .5) +
-  annotate('text', x = presets$Event, y = 0, label = presets$Event, color = "black", hjust = -1.5, angle = 90) +
-  scale_x_discrete(breaks = dat_temp$Event.date[seq(1, nrow(dat_temp), by = 7*3)]) +
+  geom_vline(xintercept = presets$Event,
+             color = colors_penn$primary[2],
+             linetype = "dashed",
+             linewidth = .5
+             ) +
+  annotate('text',
+           label = presets$Event,
+           color = colors_penn$primary[2],
+           x = presets$Event,
+           y = Inf,
+           hjust = "top",
+           vjust = "bottom",
+           angle = 90
+           ) +
   labs(x = 'Date') +
   theme_classic(base_family = "sans")
 ```
