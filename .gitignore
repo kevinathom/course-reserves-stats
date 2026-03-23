@@ -4,6 +4,8 @@
 # Rendered outputs
 /code/*.pdf
 /code/*.html
+/code/*.pptx
+/code/*.potx
 
 ## R
 
