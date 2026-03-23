@@ -53,7 +53,15 @@ dat <- filter(dat, Course.code %in% course_codes & User.role == 'Student')
 dat <- filter(dat, User.role == 'Student')
 ```
 
-These data cover courses from `{r} dat$Course.term[dat$Event.date == min(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == min(dat$Event.date)][1]` through `{r} dat$Course.term[dat$Event.date == max(dat$Event.date)][1]` `{r} dat$Course.year[dat$Event.date == max(dat$Event.date)][1]`.
+```{r}
+# Check for multiple course terms
+term_min <- paste(dat$Course.term[dat$Event.date == min(dat$Event.date)][1],
+                  dat$Course.year[dat$Event.date == min(dat$Event.date)][1])
+term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
+                  dat$Course.year[dat$Event.date == max(dat$Event.date)][1])
+```
+
+These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
 
 ## Summary by viewed item
 
