@@ -34,6 +34,7 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
+#| eval: false
 # Load and filter data (data file with all course codes)
 course_codes <- c('BAN_PUBH-5010-001 202610',
                   'BAN_PUBH-5010-001 202520',
@@ -48,7 +49,6 @@ dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
-#| eval: false
 # Load and filter data (data file with relevant course codes only)
 dat <-
   read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv') |>
