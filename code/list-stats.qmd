@@ -23,9 +23,94 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
                     gray = c('#555d6a', '#757f8f', '#a7aeba', '#e1e4ec'))
 ```
 
-## Items per list
+```{r}
+# Load and filter data (data file with relevant course codes only)
+dat <-
+  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv') |>
+  filter(User.role == 'Student')
+dat$Citation <- as.character(dat$Citation)
+dat$Reading.list <- as.character(dat$Reading.list)
+```
 
-Number of items per list (n, mean, median), infographic-style
+```{r}
+# Concatenate key course terms
+term_min <- paste(dat$Course.term[dat$Event.date == min(dat$Event.date)][1],
+                  dat$Course.year[dat$Event.date == min(dat$Event.date)][1])
+term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
+                  dat$Course.year[dat$Event.date == max(dat$Event.date)][1])
+```
+
+## About the data
+
+These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
+
+Items that were viewed zero times do not appear. Lists containing only items that were viewed zero times do not appear either.
+
+## Item statistics: Overall
+
+```{r}
+dat_temp <- dat |>
+  group_by(Reading.list) |>
+  summarize(Citations = length(unique(Citation)),
+            Views = sum(Total.views)
+            ) |>
+  arrange(Reading.list)
+```
+
+- Minimum items per list: `{r} min(dat_temp$Citations)`
+- Mean items per list: `{r} round(mean(dat_temp$Citations), digits = 1)`
+- Median items per list: `{r} median(dat_temp$Citations)`
+- Maximum items per list: `{r} max(dat_temp$Citations)`
+
+Number of lists: `{r} nrow(dat_temp)`
+
+
+## Item statistics: By department
+
+```{r}
+dat_temp <- dat |>
+  group_by(Reading.list, Processing.department) |>
+  summarize(Citations = length(unique(Citation))
+            ) |>
+  group_by(Processing.department) |>
+  summarize(Minimum = min(Citations),
+            Mean = round(mean(Citations),
+                         digits = 1),
+            Median = median(Citations),
+            Maximum = max(Citations)
+            ) |>
+  arrange(Processing.department)
+kbl(dat_temp,
+    format = 'markdown',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE,
+    longtable = TRUE
+    )
+```
+
+## Statistics by list
+
+```{r}
+##| tbl-cap: "Statistics by list"
+dat_temp <- dat |>
+  group_by(Reading.list) |>
+  summarize(Courses = length(unique(Course.code)),
+            'Median\nenrollment' = median(Course.enrollment),
+            Citations = length(unique(Citation)),
+            Views = sum(Total.views)
+            ) |>
+  arrange(Reading.list)
+kbl(dat_temp,
+#    format = 'latex',
+    format = 'markdown',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE,
+    longtable = TRUE
+    )# |>
+#  kable_styling(c('striped'),
+#                latex_options = c('HOLD_position', 'repeat_header')
+#                )
+```
 
 ## ??
 
