@@ -64,7 +64,6 @@ dat_temp <- dat |>
 
 Number of lists: `{r} nrow(dat_temp)`
 
-
 ## Item statistics: By department
 
 ```{r}
@@ -72,12 +71,12 @@ dat_temp <- dat |>
   group_by(Reading.list, Processing.department) |>
   summarize(Citations = length(unique(Citation))
             ) |>
-  group_by(Processing.department) |>
-  summarize(Minimum = min(Citations),
-            Mean = round(mean(Citations),
+  summarize(Lists = n(Citations),
+            'Minimum\nItems' = min(Citations),
+            'Mean\nItems' = round(mean(Citations),
                          digits = 1),
-            Median = median(Citations),
-            Maximum = max(Citations)
+            'Median\nItems' = median(Citations),
+            'Maximum\nItems' = max(Citations)
             ) |>
   arrange(Processing.department)
 kbl(dat_temp,
@@ -86,6 +85,20 @@ kbl(dat_temp,
     escape = FALSE,
     longtable = TRUE
     )
+```
+
+## Item statistics: By department
+
+```{r}
+dat_temp <- dat |>
+  group_by(Reading.list, Processing.department) |>
+  summarize(Citations = length(unique(Citation))
+            ) |>
+  group_by(Processing.department)
+ggplot(dat_temp,
+       aes(x = Citations, y = Processing.department)
+    ) +
+  geom_boxplot()
 ```
 
 ## Statistics by list
