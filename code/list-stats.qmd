@@ -46,8 +46,6 @@ These data cover courses from `{r} if (term_max == term_min) term_min else paste
 
 Citations that were viewed zero times do not appear. Lists containing only citations that were viewed zero times do not appear either.
 
-## List size across all `{r} nrow(dat_temp)` lists
-
 ```{r}
 dat_temp <- dat |>
   group_by(Reading.list) |>
@@ -56,6 +54,8 @@ dat_temp <- dat |>
             ) |>
   arrange(Reading.list)
 ```
+
+## List size across all `{r} nrow(dat_temp)` lists
 
 - Smallest list: `{r} min(dat_temp$Citations)`
 - Median citations per list: `{r} median(dat_temp$Citations)`
@@ -107,16 +107,19 @@ ggplot(dat_temp,
 #  geom_jitter()
 ```
 
-## Largest lists
-
-These lists were unexpectedly large (dots in the box plot).
+## Large lists (dots from the box plot)
 
 ```{r}
 dat_temp <- dat |>
   group_by(Processing.department, Reading.list) |>
-  summarize(Citations = length(unique(Citation))
+  summarize(Course = Course.name[1],
+            Citations = length(unique(Citation))
             ) |>
-  arrange(desc(Citations), Processing.department, Reading.list)
+  arrange(desc(Citations),
+          Processing.department,
+          Course,
+          Reading.list
+          )
 dat_temp$Include <- FALSE
 # Define large lists as outliers by Tukey's method: Q3 + 1.5*IQR
 for(dept in unique(dat_temp$Processing.department)){
@@ -126,6 +129,7 @@ for(dept in unique(dat_temp$Processing.department)){
   limit <- Q3 + ((Q3 - Q1) * 1.5)
   dat_temp$Include[dat_temp$Processing.department == dept & dat_temp$Citations > limit] <- TRUE
 }
+dat_temp <- subset(dat_temp, Include, select = -Include)
 kbl(dat_temp,
     format = 'markdown',
     col.names = linebreak(names(dat_temp)),
@@ -136,18 +140,34 @@ kbl(dat_temp,
 
 ## Citations in multiple lists
 
+```{r}
+dat_temp <- dat |>
+  group_by(Citation) |>
+  summarize(Lists = length(unique(Reading.list))) |>
+  subset(Lists > 1) |>
+  arrange(Lists, desc(Citation))
+```
 
+`{r} if(nrow(dat_temp) > 0){}else{'No repeated citations'}`
 
-## Statistics by list
+```{r}
+kbl(dat_temp,
+    format = 'markdown',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE,
+    longtable = TRUE
+    )
+```
 
-Don't keep this slide, but extract or excerpt the table as needed.
+## Statistics by list - Do not keep as-is
 
 ```{r}
 ##| tbl-cap: "Statistics by list"
 dat_temp <- dat |>
   group_by(Reading.list) |>
   summarize(Courses = length(unique(Course.code)),
-            'Median\nenrollment' = median(Course.enrollment),
+            Course = Course.name[1],
+            'Course enrollment' = median(Course.enrollment),
             Citations = length(unique(Citation)),
             Views = sum(Total.views)
             ) |>
@@ -163,6 +183,3 @@ kbl(dat_temp,
 #                latex_options = c('HOLD_position', 'repeat_header')
 #                )
 ```
-
-## ??
-
