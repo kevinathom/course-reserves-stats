@@ -1,5 +1,5 @@
 ---
-title: "Course Reserves Statistics"
+title: "Course Reserves: List Statistics"
 author: "Lippincott Library"
 date: today
 execute: 
@@ -44,9 +44,9 @@ term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
 
 These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
 
-Items that were viewed zero times do not appear. Lists containing only items that were viewed zero times do not appear either.
+Citations that were viewed zero times do not appear. Lists containing only citations that were viewed zero times do not appear either.
 
-## Item statistics: Overall
+## List size across all `{r} nrow(dat_temp)` lists
 
 ```{r}
 dat_temp <- dat |>
@@ -57,26 +57,25 @@ dat_temp <- dat |>
   arrange(Reading.list)
 ```
 
-- Minimum items per list: `{r} min(dat_temp$Citations)`
-- Mean items per list: `{r} round(mean(dat_temp$Citations), digits = 1)`
-- Median items per list: `{r} median(dat_temp$Citations)`
-- Maximum items per list: `{r} max(dat_temp$Citations)`
+- Smallest list: `{r} min(dat_temp$Citations)`
+- Median citations per list: `{r} median(dat_temp$Citations)`
+- Mean citations per list: `{r} round(mean(dat_temp$Citations), digits = 1)`
+- Largest list: `{r} max(dat_temp$Citations)`
 
-Number of lists: `{r} nrow(dat_temp)`
-
-## Item statistics: By department
+## List size by department
 
 ```{r}
 dat_temp <- dat |>
-  group_by(Reading.list, Processing.department) |>
+  group_by(Processing.department, Reading.list) |>
   summarize(Citations = length(unique(Citation))
             ) |>
-  summarize(Lists = n(Citations),
-            'Minimum\nItems' = min(Citations),
-            'Mean\nItems' = round(mean(Citations),
+  group_by(Processing.department) |>
+  summarize(Lists = n(),
+            'Smallest list' = min(Citations),
+            'Median citations' = median(Citations),
+            'Mean citations' = round(mean(Citations),
                          digits = 1),
-            'Median\nItems' = median(Citations),
-            'Maximum\nItems' = max(Citations)
+            'Largest list' = max(Citations)
             ) |>
   arrange(Processing.department)
 kbl(dat_temp,
@@ -87,21 +86,61 @@ kbl(dat_temp,
     )
 ```
 
-## Item statistics: By department
+## List size by department
+
+Box plots display the median list size (center line), middle half of the lists (boxed area), expected variation in list size (whiskers), and unexpected list sizes (dots).
 
 ```{r}
 dat_temp <- dat |>
-  group_by(Reading.list, Processing.department) |>
+  group_by(Processing.department, Reading.list) |>
   summarize(Citations = length(unique(Citation))
             ) |>
   group_by(Processing.department)
+for(dept in unique(dat_temp$Processing.department)){
+  dat_temp$Processing.department[dat_temp$Processing.department == dept] <- paste0(dept, " (", sum(dat_temp$Processing.department == dept), ")")
+}
 ggplot(dat_temp,
        aes(x = Citations, y = Processing.department)
     ) +
-  geom_boxplot()
+  geom_boxplot() +
+  labs(y = "Processing Department (N)")# +
+#  geom_jitter()
 ```
 
+## Largest lists
+
+These lists were unexpectedly large (dots in the box plot).
+
+```{r}
+dat_temp <- dat |>
+  group_by(Processing.department, Reading.list) |>
+  summarize(Citations = length(unique(Citation))
+            ) |>
+  arrange(desc(Citations), Processing.department, Reading.list)
+dat_temp$Include <- FALSE
+# Define large lists as outliers by Tukey's method: Q3 + 1.5*IQR
+for(dept in unique(dat_temp$Processing.department)){
+  data_dept <- dat_temp$Citations[dat_temp$Processing.department == dept]
+  Q1 <- quantile(data_dept, .25)
+  Q3 <- quantile(data_dept, .75)
+  limit <- Q3 + ((Q3 - Q1) * 1.5)
+  dat_temp$Include[dat_temp$Processing.department == dept & dat_temp$Citations > limit] <- TRUE
+}
+kbl(dat_temp,
+    format = 'markdown',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE,
+    longtable = TRUE
+    )
+```
+
+## Citations in multiple lists
+
+
+
 ## Statistics by list
+
+Don't keep this slide, but extract or excerpt the table as needed.
 
 ```{r}
 ##| tbl-cap: "Statistics by list"
