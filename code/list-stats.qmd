@@ -16,6 +16,7 @@ format:
 library(dplyr)
 library(kableExtra)
 library(ggplot2)
+library(readr)
 
 # Penn colors
 colors_penn <- list(primary = c('#011f5b', '#990000'),
@@ -24,12 +25,20 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-# Load and filter data (data file with relevant course codes only)
+# Load and filter data
 dat <-
-  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv') |>
+  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Event.date = 'D',
+                            Course.enrollment = 'n',
+                            Files.downloaded = 'n',
+                            File.views = 'n',
+                            Full.text.views = 'n',
+                            Total.views = 'n'
+                            )
+           ) |>
   filter(User.role == 'Student')
-dat$Citation <- as.character(dat$Citation)
-dat$Reading.list <- as.character(dat$Reading.list)
 ```
 
 ```{r}
@@ -44,7 +53,7 @@ term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
 
 These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
 
-Citations that were viewed zero times do not appear. Lists containing only citations that were viewed zero times do not appear either.
+Citations that were viewed zero times do not appear and do not roll up to larger groupings, like lists.
 
 ```{r}
 dat_temp <- dat |>
