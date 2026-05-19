@@ -26,6 +26,7 @@ fig-cap-location: top
 # Dependencies
 library(dplyr)
 library(kableExtra)
+library(readr)
 
 # Penn colors
 colors_penn <- list(primary = c('#011f5b', '#990000'),
@@ -43,17 +44,35 @@ course_codes <- c('BAN_PUBH-5010-001 202610',
                   'BAN_PUBH-5010-001 202420',
                   'BAN_PUBH-5010-001 202410')
 dat <-
-  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv') |>
+  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Event.date = 'D',
+                            Course.enrollment = 'n',
+                            Files.downloaded = 'n',
+                            File.views = 'n',
+                            Full.text.views = 'n',
+                            Total.views = 'n'
+                            )
+           ) |>
   filter(Course.code %in% course_codes & User.role == 'Student')
-dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
 # Load and filter data (data file with relevant course codes only)
 dat <-
-  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv') |>
+  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Event.date = 'D',
+                            Course.enrollment = 'n',
+                            Files.downloaded = 'n',
+                            File.views = 'n',
+                            Full.text.views = 'n',
+                            Total.views = 'n'
+                            )
+           ) |>
   filter(User.role == 'Student')
-dat$Citation <- as.character(dat$Citation)
 ```
 
 ```{r}
