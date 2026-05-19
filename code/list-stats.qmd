@@ -25,8 +25,8 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-# Load and filter data
-dat <-
+# Load, filter, and merge data
+dat_usage <-
   read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
@@ -39,6 +39,17 @@ dat <-
                             )
            ) |>
   filter(User.role == 'Student')
+dat_map <-
+  read_csv('~/GitHub/course-reserves-stats/res/leganto-course-citations-2026-05-19.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Modification.date = 'T'
+                            )
+           )
+dat <- full_join(dat_usage, dat_map,
+                 by = join_by(Course, Reading.list, Citation)
+                 ) |>
+  filter(Course %in% dat_usage$Course)
 ```
 
 ```{r}
