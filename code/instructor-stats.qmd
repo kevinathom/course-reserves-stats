@@ -44,7 +44,7 @@ course_codes <- c('BAN_PUBH-5010-001 202610',
                   'BAN_PUBH-5010-001 202420',
                   'BAN_PUBH-5010-001 202410')
 dat <-
-  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv',
+  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
                             Event.date = 'D',
@@ -61,7 +61,7 @@ dat <-
 ```{r}
 # Load and filter data (data file with relevant course codes only)
 dat <-
-  read.csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv',
+  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
                             Event.date = 'D',
