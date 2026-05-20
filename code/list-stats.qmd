@@ -25,7 +25,8 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-# Load, filter, and merge data
+#| eval: false
+# Load, filter, and merge data -- old
 dat_usage <-
   read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv',
            name_repair = 'universal',
@@ -39,8 +40,26 @@ dat_usage <-
                             )
            ) |>
   filter(User.role == 'Student')
+```
+
+```{r}
+# Load, filter, and merge data
+setwd('~/GitHub/course-reserves-stats/res/')
+dat_course <-
+  read_csv('leganto-courses-2026-05-20.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Course.start.date = 'D',
+                            Course.end.date = 'D',
+                            Course.enrollment = 'i',
+                            Creation.date = 'T',
+                            Modification.date = 'T'
+                            )
+           )
+'leganto-reading-lists-2026-05-20.csv'
+'leganto-citations-2026-05-20.csv'
 dat_map <-
-  read_csv('~/GitHub/course-reserves-stats/res/leganto-course-citations-2026-05-19.csv',
+  read_csv('leganto-course-citations-2026-05-19.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
                             Modification.date = 'T'
@@ -50,6 +69,7 @@ dat <- full_join(dat_usage, dat_map,
                  by = join_by(Course, Reading.list, Citation)
                  ) |>
   filter(Course %in% dat_usage$Course)
+rm()
 ```
 
 ```{r}
@@ -74,6 +94,10 @@ dat_temp <- dat |>
             ) |>
   arrange(Reading.list)
 ```
+
+## List and course volume by department
+
+
 
 ## List size across all `{r} nrow(dat_temp)` lists
 
