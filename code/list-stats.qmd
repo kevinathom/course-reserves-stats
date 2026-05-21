@@ -25,59 +25,83 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-#| eval: false
-# Load, filter, and merge data -- old
-dat_usage <-
-  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-05-18.csv',
+# Load data
+setwd('~/GitHub/course-reserves-stats/res/')
+
+dat_view <-
+  read_csv('leganto-usage-views-2026-05-18.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
                             Event.date = 'D',
-                            Course.enrollment = 'n',
-                            Files.downloaded = 'n',
-                            File.views = 'n',
-                            Full.text.views = 'n',
-                            Total.views = 'n'
+                            Course.enrollment = 'i',
+                            Files.downloaded = 'i',
+                            File.views = 'i',
+                            Full.text.views = 'i',
+                            Total.views = 'i'
                             )
            ) |>
   filter(User.role == 'Student')
-```
 
-```{r}
-# Load, filter, and merge data
-setwd('~/GitHub/course-reserves-stats/res/')
 dat_course <-
   read_csv('leganto-courses-2026-05-20.csv',
            name_repair = 'universal',
            col_types = cols(.default = 'c',
-                            Course.start.date = 'D',
-                            Course.end.date = 'D',
-                            Course.enrollment = 'i',
-                            Creation.date = 'T',
-                            Modification.date = 'T'
+                            Course.enrollment = 'i'
                             )
            )
-'leganto-reading-lists-2026-05-20.csv'
-'leganto-citations-2026-05-20.csv'
+dat_course$Course.start.date <- as.Date(sub(" .*", "", dat_course$Course.start.date))
+dat_course$Course.end.date <- as.Date(sub(" .*", "", dat_course$Course.end.date))
+dat_course$Creation.date <- as.Date(sub(" .*", "", dat_course$Creation.date))
+dat_course$Modification.date <- as.Date(sub(" .*", "", dat_course$Modification.date))
+
+dat_list <-
+  read_csv('leganto-reading-lists-2026-05-20.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Number.of.citations = 'i',
+                            Visible.start.date = 'D',
+                            Visible.end.date = 'D'
+                            )
+           )
+dat_list$Creation.date <- as.Date(sub(" .*", "", dat_list$Creation.date))
+dat_list$Modification.date <- as.Date(sub(" .*", "", dat_list$Modification.date))
+
+dat_cite <-
+  read_csv('leganto-citations-2026-05-20.csv',
+           name_repair = 'universal',
+           col_types = cols(.default = 'c',
+                            Citation.order = 'i')
+           )
+dat_cite$Creation.date <- as.Date(sub(" .*", "", dat_cite$Creation.date))
+dat_cite$Modification.date <- as.Date(sub(" .*", "", dat_cite$Modification.date))
+
 dat_map <-
   read_csv('leganto-course-citations-2026-05-19.csv',
            name_repair = 'universal',
-           col_types = cols(.default = 'c',
-                            Modification.date = 'T'
-                            )
+           col_types = cols(.default = 'c')
            )
+dat_map$Modification.date <- as.Date(sub(" .*", "", dat_map$Modification.date))
+```
+
+```{r}
+#| eval: false
+# leftover code; use for joining as needed
 dat <- full_join(dat_usage, dat_map,
                  by = join_by(Course, Reading.list, Citation)
                  ) |>
   filter(Course %in% dat_usage$Course)
-rm()
 ```
 
 ```{r}
 # Concatenate key course terms
-term_min <- paste(dat$Course.term[dat$Event.date == min(dat$Event.date)][1],
-                  dat$Course.year[dat$Event.date == min(dat$Event.date)][1])
-term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
-                  dat$Course.year[dat$Event.date == max(dat$Event.date)][1])
+# The courses file controls the date range
+term_min <-
+  paste(dat_course$Course.term[dat_course$Course.start.date == min(dat_course$Course.start.date)][1],
+        dat_course$Course.year[dat_course$Course.start.date == min(dat_course$Course.start.date)][1])
+
+term_max <-
+  paste(dat_course$Course.term[dat_course$Course.start.date == max(dat_course$Course.start.date)][1],
+        dat_course$Course.year[dat_course$Course.start.date == max(dat_course$Course.start.date)][1])
 ```
 
 ## About the data
@@ -86,7 +110,12 @@ These data cover courses from `{r} if (term_max == term_min) term_min else paste
 
 Citations that were viewed zero times do not appear and do not roll up to larger groupings, like lists.
 
+## List and course volume by department
+
+
+
 ```{r}
+# Generate data for the following heading and slide
 dat_temp <- dat |>
   group_by(Reading.list) |>
   summarize(Citations = length(unique(Citation)),
@@ -94,10 +123,6 @@ dat_temp <- dat |>
             ) |>
   arrange(Reading.list)
 ```
-
-## List and course volume by department
-
-
 
 ## List size across all `{r} nrow(dat_temp)` lists
 
