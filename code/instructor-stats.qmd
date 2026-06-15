@@ -24,8 +24,17 @@ fig-cap-location: top
 
 ```{r}
 # Dependencies
+if( !("dplyr" %in% installed.packages()) ){
+  install.packages("dplyr")
+}
 library(dplyr)
+if( !("kableExtra" %in% installed.packages()) ){
+  install.packages("kableExtra")
+}
 library(kableExtra)
+if( !("readr" %in% installed.packages()) ){
+  install.packages("readr")
+}
 library(readr)
 
 # Penn colors
@@ -210,6 +219,9 @@ presets <- list(
 
 ```{r}
 #| fig-cap: "Number of views by date"
+if( !("ggplot2" %in% installed.packages()) ){
+  install.packages("ggplot2")
+}
 library(ggplot2)
 
 dates <- data.frame(Event.date = seq(from = as.Date(min(dat$Event.date)),
