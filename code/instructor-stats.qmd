@@ -36,6 +36,10 @@ if( !("readr" %in% installed.packages()) ){
   install.packages("readr")
 }
 library(readr)
+if( !("readxl" %in% installed.packages()) ){
+  install.packages("readxl")
+}
+library(readxl)
 
 # Penn colors
 colors_penn <- list(primary = c('#011f5b', '#990000'),
@@ -44,9 +48,14 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-# Load and filter data (data file with relevant course codes only)
+# Load and join data (data files with relevant course codes only)
+
+setwd('~/GitHub/course-reserves-stats/res/')
+data_file_metridoc <- 'leganto-usage-views-2026-03-17.csv'
+data_file_alma <- c('alma_citations_20260624.xlsx') # Enter one or more file names
+
 dat <-
-  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv',
+  read_csv(data_file_metridoc,
            name_repair = 'universal',
            col_types = cols(.default = 'c',
                             Event.date = 'D',
@@ -58,6 +67,27 @@ dat <-
                             )
            ) |>
   filter(User.role == 'Student')
+
+dat_alma <-
+  lapply(data_file_alma,
+         read_excel,
+         .name_repair = 'universal',
+         col_types = 'text'
+         )
+dat_alma <- do.call(rbind, dat_alma) |>
+  select(Citation.ID,
+         Citation.Title,
+         Material.type
+         # ADD MORE HERE!!
+         )
+
+dat <- left_join(dat, dat_alma,
+                 by = join_by(Citation == Citation.ID),
+                 na_matches = 'never',
+                 multiple = 'any'
+                 )
+
+rm(dat_alma)
 ```
 
 ```{r}
