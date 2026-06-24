@@ -44,30 +44,6 @@ colors_penn <- list(primary = c('#011f5b', '#990000'),
 ```
 
 ```{r}
-#| eval: false
-# Load and filter data (data file with all course codes)
-course_codes <- c('BAN_PUBH-5010-001 202610',
-                  'BAN_PUBH-5010-001 202520',
-                  'BAN_PUBH-5010-001 202510',
-                  'BAN_PUBH-5010-001 202430',
-                  'BAN_PUBH-5010-001 202420',
-                  'BAN_PUBH-5010-001 202410')
-dat <-
-  read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-10.csv',
-           name_repair = 'universal',
-           col_types = cols(.default = 'c',
-                            Event.date = 'D',
-                            Course.enrollment = 'n',
-                            Files.downloaded = 'n',
-                            File.views = 'n',
-                            Full.text.views = 'n',
-                            Total.views = 'n'
-                            )
-           ) |>
-  filter(Course.code %in% course_codes & User.role == 'Student')
-```
-
-```{r}
 # Load and filter data (data file with relevant course codes only)
 dat <-
   read_csv('~/GitHub/course-reserves-stats/res/leganto-usage-views-2026-03-17.csv',
