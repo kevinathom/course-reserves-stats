@@ -23,23 +23,14 @@ fig-cap-location: top
 ---
 
 ```{r}
-# Dependencies
-if( !("dplyr" %in% installed.packages()) ){
-  install.packages("dplyr")
+# Install (if needed) and load packages 
+for(package in c('dplyr', 'kableExtra', 'readr', 'readxl')){
+  if( !(package %in% installed.packages()) ){
+    install.packages(package)
+  }
+  eval(call('library', as.name(package)))
 }
-library(dplyr)
-if( !("kableExtra" %in% installed.packages()) ){
-  install.packages("kableExtra")
-}
-library(kableExtra)
-if( !("readr" %in% installed.packages()) ){
-  install.packages("readr")
-}
-library(readr)
-if( !("readxl" %in% installed.packages()) ){
-  install.packages("readxl")
-}
-library(readxl)
+rm(package)
 
 # Penn colors
 colors_penn <- list(primary = c('#011f5b', '#990000'),
@@ -87,7 +78,7 @@ dat <- left_join(dat, dat_alma,
                  multiple = 'any'
                  )
 
-rm(dat_alma)
+rm(dat_alma, data_file_metridoc, data_file_alma)
 ```
 
 ```{r}
