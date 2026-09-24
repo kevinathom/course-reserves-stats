@@ -71,14 +71,14 @@ dat_alma <- do.call(rbind, dat_alma) |>
          Citation.Title,
          Journal.Title,
          Material.type
-         # ADD MORE HERE!!
+         # ADD ALMA FIELDS HERE!!
          ) |>
   unite(Citation.Title,
         Chapter.Title, Citation.Title, Journal.Title,
         sep = ', ',
         na.rm=TRUE)
 
-dat <- left_join(dat, dat_alma,
+dat <- full_join(dat, dat_alma,
                  by = join_by(Citation == Citation.ID),
                  na_matches = 'never',
                  multiple = 'any'
@@ -97,20 +97,20 @@ term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
 
 These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
 
-## Summary by viewed item
+## Summary by item
 
-Items that were viewed zero times do not appear.
+Items without views report some related metrics as NA.
 
 ```{r}
-#| tbl-cap: "Number of views for each viewed item"
+#| tbl-cap: "Number of views for each item"
 dat_temp <- dat |>
-  group_by(Citation) |>
+  group_by(Citation.Title) |>
   summarize(Courses = length(unique(Course.code)),
             'Minimum\nenrollment' = min(Course.enrollment),
             'Maximum\nenrollment' = max(Course.enrollment),
-            Views = sum(Total.views)
+            Views = sum(Total.views, na.rm = TRUE)
             ) |>
-  arrange(Citation)
+  arrange(Citation.Title)
 kbl(dat_temp,
     format = 'latex',
     col.names = linebreak(names(dat_temp)),
@@ -125,20 +125,24 @@ kbl(dat_temp,
 ```{r}
 # Prepare view rates
 dat_rate <- dat |>
-  group_by(Citation, Course.code) |>
+  group_by(Citation.Title, Course.code) |>
   summarize(Enrollment = median(Course.enrollment),
-            Views = sum(Total.views)
+            Views = sum(Total.views, na.rm = TRUE)
             ) |>
-  group_by(Citation) |>
+  group_by(Citation.Title) |>
   summarize(Courses = length(unique(Course.code)),
-            'Median\nenrollment' = median(Enrollment),
+            'Median\nenrollment' = median(Enrollment, na.rm = TRUE),
             Views = sum(Views),
-            'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
+            'Views per\nstudent' = round(sum(Views, na.rm = TRUE) / sum(Enrollment, na.rm = FALSE), 2)
             ) |>
   arrange(desc(`Views per\nstudent`), .by_group = FALSE)
 ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1))
 show_ct_under_1 <- ct_under_1 > 0
 ```
+RESUME UPDATING:
+
+- `Citation` -> `Citation.Title`
+- Add `na.rm = TRUE` to summary calculations
 
 ```{r}
 #| tbl-cap: "Most-viewed and least-viewed items with views"
