@@ -71,7 +71,7 @@ dat_alma <- do.call(rbind, dat_alma) |>
          Citation.Title,
          Journal.Title,
          Material.type
-         # ADD ALMA FIELDS HERE!!
+         # ADD MORE ALMA FIELDS HERE!!
          ) |>
   unite(Citation.Title,
         Chapter.Title, Citation.Title, Journal.Title,
@@ -89,17 +89,18 @@ rm(dat_alma, data_file_metridoc, data_file_alma)
 
 ```{r}
 # Concatenate key course terms
-term_min <- paste(dat$Course.term[dat$Event.date == min(dat$Event.date)][1],
-                  dat$Course.year[dat$Event.date == min(dat$Event.date)][1])
-term_max <- paste(dat$Course.term[dat$Event.date == max(dat$Event.date)][1],
-                  dat$Course.year[dat$Event.date == max(dat$Event.date)][1])
+dat_temp <- drop_na(dat)
+term_min <- paste(dat_temp$Course.term[dat_temp$Event.date == min(dat_temp$Event.date)][1],
+                  dat_temp$Course.year[dat_temp$Event.date == min(dat_temp$Event.date)][1])
+term_max <- paste(dat_temp$Course.term[dat_temp$Event.date == max(dat_temp$Event.date)][1],
+                  dat_temp$Course.year[dat_temp$Event.date == max(dat_temp$Event.date)][1])
 ```
 
 These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
 
 ## Summary by item
 
-Items without views report some related metrics as NA.
+Note: Items without views report some related metrics as NA.
 
 ```{r}
 #| tbl-cap: "Number of views for each item"
@@ -136,16 +137,12 @@ dat_rate <- dat |>
             'Views per\nstudent' = round(sum(Views, na.rm = TRUE) / sum(Enrollment, na.rm = FALSE), 2)
             ) |>
   arrange(desc(`Views per\nstudent`), .by_group = FALSE)
-ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1))
+ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1 | Views == 0))
 show_ct_under_1 <- ct_under_1 > 0
 ```
-RESUME UPDATING:
-
-- `Citation` -> `Citation.Title`
-- Add `na.rm = TRUE` to summary calculations
 
 ```{r}
-#| tbl-cap: "Most-viewed and least-viewed items with views"
+#| tbl-cap: "Most-viewed and least-viewed items"
 dat_temp <- dat_rate
 if(nrow(dat_temp) > 10){
   dat_temp <- rbind(dat_temp[1:5, ],
@@ -164,12 +161,12 @@ kbl(dat_temp,
                 )
 ```
 
-Out of all items with views, `{r} ct_under_1` `{r} if (ct_under_1 == 1) "item" else "items"` averaged below one view per student.
+Out of all items, `{r} ct_under_1` `{r} if (ct_under_1 == 1) "item" else "items"` averaged below one view per student.
 
 ```{r}
 #| include: !expr show_ct_under_1
-#| tbl-cap: "Under-viewed items with views"
-dat_temp <- dat_rate |> filter(`Views per\nstudent` < 1)
+#| tbl-cap: "Under-viewed items"
+dat_temp <- dat_rate |> filter(`Views per\nstudent` < 1 | Views == 0)
 if(nrow(dat_temp) == 0){
   dat_temp <- rbind(dat_temp,
                     rep("N/A", ncol(dat_temp))
@@ -188,9 +185,11 @@ kbl(dat_temp,
 
 ## Summary by term
 
+Note: A course with no items viewed will not appear in this report.
+
 ```{r}
 #| tbl-cap: "Number of views by term"
-dat_temp <- dat |>
+dat_temp <- drop_na(dat) |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
             'Viewed\nitems' = length(unique(Citation)),
@@ -231,10 +230,10 @@ if( !("ggplot2" %in% installed.packages()) ){
 }
 library(ggplot2)
 
-dates <- data.frame(Event.date = seq(from = as.Date(min(dat$Event.date)),
-                                     to = as.Date(max(dat$Event.date)),
+dates <- data.frame(Event.date = seq(from = as.Date(min(dat$Event.date, na.rm = TRUE)),
+                                     to = as.Date(max(dat$Event.date, na.rm = TRUE)),
                                      by = "day"))
-dat_temp <- dat |>
+dat_temp <- drop_na(dat) |>
   filter(Course.term %in% presets$Term & Course.year %in% presets$Year) |>
   group_by(Event.date) |>
   summarize(Views = sum(Total.views))
