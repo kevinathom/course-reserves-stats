@@ -24,7 +24,7 @@ fig-cap-location: top
 
 ```{r}
 # Install (if needed) and load packages 
-for(package in c('dplyr', 'tidyr', 'kableExtra', 'readr', 'readxl')){
+for(package in c('dplyr', 'tidyr', 'kableExtra', 'readr', 'readxl', 'stringr')){
   if( !(package %in% installed.packages()) ){
     install.packages(package)
   }
@@ -73,7 +73,7 @@ dat_alma <- do.call(rbind, dat_alma) |>
          Material.type
          # ADD MORE ALMA FIELDS HERE!!
          ) |>
-  unite(Citation.Title,
+  unite(Title,
         Chapter.Title, Citation.Title, Journal.Title,
         sep = ', ',
         na.rm=TRUE)
@@ -83,8 +83,16 @@ dat <- full_join(dat, dat_alma,
                  na_matches = 'never',
                  multiple = 'any'
                  )
+dat$Title <- gsub("&", "\\\\&", dat$Title) # Escape & so it renders properly in non-escaped kable tables
 
 rm(dat_alma, data_file_metridoc, data_file_alma)
+```
+
+```{r}
+# Create functions
+ttl_trunc <- function(df){
+  str_trunc(df$Title, width = 43)
+}
 ```
 
 ```{r}
@@ -105,13 +113,14 @@ Note: Items without views report some related metrics as NA.
 ```{r}
 #| tbl-cap: "Number of views for each item"
 dat_temp <- dat |>
-  group_by(Citation.Title) |>
+  group_by(Title) |>
   summarize(Courses = length(unique(Course.code)),
             'Minimum\nenrollment' = min(Course.enrollment),
             'Maximum\nenrollment' = max(Course.enrollment),
             Views = sum(Total.views, na.rm = TRUE)
             ) |>
-  arrange(Citation.Title)
+  arrange(Title)
+dat_temp$Title <- ttl_trunc(dat_temp)
 kbl(dat_temp,
     format = 'latex',
     col.names = linebreak(names(dat_temp)),
@@ -126,11 +135,11 @@ kbl(dat_temp,
 ```{r}
 # Prepare view rates
 dat_rate <- dat |>
-  group_by(Citation.Title, Course.code) |>
+  group_by(Title, Course.code) |>
   summarize(Enrollment = median(Course.enrollment),
             Views = sum(Total.views, na.rm = TRUE)
             ) |>
-  group_by(Citation.Title) |>
+  group_by(Title) |>
   summarize(Courses = length(unique(Course.code)),
             'Median\nenrollment' = median(Enrollment, na.rm = TRUE),
             Views = sum(Views),
@@ -150,6 +159,7 @@ if(nrow(dat_temp) > 10){
                     dat_temp[(nrow(dat_temp)-4):nrow(dat_temp), ]
                     )
 }
+dat_temp$Title <- ttl_trunc(dat_temp)
 kbl(dat_temp,
     format = 'latex',
     col.names = linebreak(names(dat_temp)),
@@ -172,6 +182,7 @@ if(nrow(dat_temp) == 0){
                     rep("N/A", ncol(dat_temp))
                     )
 }
+dat_temp$Title <- ttl_trunc(dat_temp)
 kbl(dat_temp,
     format = 'latex',
     col.names = linebreak(names(dat_temp)),
