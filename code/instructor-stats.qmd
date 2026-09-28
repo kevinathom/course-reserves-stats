@@ -70,7 +70,8 @@ dat_alma <- do.call(rbind, dat_alma) |>
          Chapter.Title,
          Citation.Title,
          Journal.Title,
-         Material.type
+         Material.type,
+         Course.Code
          # ADD MORE ALMA FIELDS HERE!!
          ) |>
   unite(Title,
@@ -79,6 +80,7 @@ dat_alma <- do.call(rbind, dat_alma) |>
         na.rm=TRUE)
 
 dat <- full_join(dat, dat_alma,
+                 #by = join_by(Citation == Citation.ID, Course.code == Course.Code), #Try this after splitting Alma data by course code
                  by = join_by(Citation == Citation.ID),
                  na_matches = 'never',
                  multiple = 'any'
