@@ -24,7 +24,7 @@ fig-cap-location: top
 
 ```{r}
 # Install (if needed) and load packages 
-for(package in c('dplyr', 'tidyr', 'kableExtra', 'readr', 'readxl', 'stringr')){
+for(package in c('data.table', 'dplyr', 'tidyr', 'kableExtra', 'readr', 'readxl', 'stringr')){
   if( !(package %in% installed.packages()) ){
     install.packages(package)
   }
@@ -77,23 +77,55 @@ dat_alma <- do.call(rbind, dat_alma) |>
   unite(Title,
         Chapter.Title, Citation.Title, Journal.Title,
         sep = ', ',
-        na.rm=TRUE)
+        na.rm=TRUE) |>
+  as.data.table()
+dat_alma <- dat_alma[,
+                     .(Course.Code = trimws(unlist(strsplit(Course.Code, ", ")))),
+                     by = setdiff(names(dat_alma), 'Course.Code')]
+dat_alma <- dat_alma[dat_alma$Course.Code %in% unique(dat$Course.code), ]
 
-dat <- full_join(dat, dat_alma,
-                 #by = join_by(Citation == Citation.ID, Course.code == Course.Code), #Try this after splitting Alma data by course code
-                 by = join_by(Citation == Citation.ID),
+dat <- full_join(as.data.table(dat), dat_alma,
+                 by = join_by(Citation == Citation.ID, Course.code == Course.Code),
+                 #by = join_by(Citation == Citation.ID),
                  na_matches = 'never',
                  multiple = 'any'
-                 )
-dat$Title <- gsub("&", "\\\\&", dat$Title) # Escape & so it renders properly in non-escaped kable tables
+                 ) |>
+  rows_patch(unique(select(dat,
+                           Course.year,
+                           Course.term,
+                           Academic.department,
+                           Course.code,
+                           Course.name,
+                           Course.enrollment,
+                           Course
+                           )),
+             by = c('Course.code'),
+             unmatched = 'ignore'
+             )
+dat[is.na(dat$Total.views), c('Files.downloaded', 'File.views', 'Full.text.views', 'Total.views')] <- 0
+# Escape characters that otherwise would break non-escaped kableExtra tables
+dat$Title <- gsub('&', '\\\\&', dat$Title) 
 
 rm(dat_alma, data_file_metridoc, data_file_alma)
 ```
 
 ```{r}
 # Create functions
+
 ttl_trunc <- function(df){
-  str_trunc(df$Title, width = 43)
+  str_trunc(df$Title, width = 37)
+}
+
+make.table <- function(df){
+  kbl(df,
+    format = 'latex',
+    col.names = linebreak(names(dat_temp)),
+    escape = FALSE,
+    longtable = TRUE
+    ) |>
+  kable_styling(c('striped'),
+                latex_options = c('HOLD_position', 'repeat_header')
+                )
 }
 ```
 
@@ -106,32 +138,21 @@ term_max <- paste(dat_temp$Course.term[dat_temp$Event.date == max(dat_temp$Event
                   dat_temp$Course.year[dat_temp$Event.date == max(dat_temp$Event.date)][1])
 ```
 
-These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`.
+These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`. They include only courses that used course reserves.
 
 ## Summary by item
-
-Note: Items without views report some related metrics as NA.
 
 ```{r}
 #| tbl-cap: "Number of views for each item"
 dat_temp <- dat |>
   group_by(Title) |>
   summarize(Courses = length(unique(Course.code)),
-            'Minimum\nenrollment' = min(Course.enrollment),
-            'Maximum\nenrollment' = max(Course.enrollment),
-            Views = sum(Total.views, na.rm = TRUE)
+            'Median\nenrollment' = median(Course.enrollment),
+            Views = sum(Total.views)
             ) |>
   arrange(Title)
 dat_temp$Title <- ttl_trunc(dat_temp)
-kbl(dat_temp,
-    format = 'latex',
-    col.names = linebreak(names(dat_temp)),
-    escape = FALSE,
-    longtable = TRUE
-    ) |>
-  kable_styling(c('striped'),
-                latex_options = c('HOLD_position', 'repeat_header')
-                )
+make.table(dat_temp)
 ```
 
 ```{r}
@@ -139,13 +160,14 @@ kbl(dat_temp,
 dat_rate <- dat |>
   group_by(Title, Course.code) |>
   summarize(Enrollment = median(Course.enrollment),
-            Views = sum(Total.views, na.rm = TRUE)
+            Views = sum(Total.views)
             ) |>
   group_by(Title) |>
   summarize(Courses = length(unique(Course.code)),
-            'Median\nenrollment' = median(Enrollment, na.rm = TRUE),
+            'Median\nenrollment' = median(Enrollment),
             Views = sum(Views),
-            'Views per\nstudent' = round(sum(Views, na.rm = TRUE) / sum(Enrollment, na.rm = FALSE), 2)
+            Students = sum(Enrollment),
+            'Views per\nstudent' = round(sum(Views) / sum(Enrollment), 2)
             ) |>
   arrange(desc(`Views per\nstudent`), .by_group = FALSE)
 ct_under_1 <- nrow(dat_rate |> filter(`Views per\nstudent` < 1 | Views == 0))
@@ -162,15 +184,7 @@ if(nrow(dat_temp) > 10){
                     )
 }
 dat_temp$Title <- ttl_trunc(dat_temp)
-kbl(dat_temp,
-    format = 'latex',
-    col.names = linebreak(names(dat_temp)),
-    escape = FALSE,
-    longtable = TRUE
-    ) |>
-  kable_styling(c('striped'),
-                latex_options = c('HOLD_position', 'repeat_header')
-                )
+make.table(dat_temp)
 ```
 
 Out of all items, `{r} ct_under_1` `{r} if (ct_under_1 == 1) "item" else "items"` averaged below one view per student.
@@ -185,20 +199,10 @@ if(nrow(dat_temp) == 0){
                     )
 }
 dat_temp$Title <- ttl_trunc(dat_temp)
-kbl(dat_temp,
-    format = 'latex',
-    col.names = linebreak(names(dat_temp)),
-    escape = FALSE,
-    longtable = TRUE
-    ) |>
-  kable_styling(c('striped'),
-                latex_options = c('HOLD_position', 'repeat_header')
-                )
+make.table(dat_temp)
 ```
 
 ## Summary by term
-
-Note: A course with no items viewed will not appear in this report.
 
 ```{r}
 #| tbl-cap: "Number of views by term"
@@ -212,15 +216,7 @@ dat_temp <- drop_na(dat) |>
             ) |>
   arrange(Course.year, Course.term)
 names(dat_temp)[c(1,2)] <- c('Course\nyear', 'Course\nterm')
-kbl(dat_temp,
-    format = 'latex',
-    col.names = linebreak(names(dat_temp)),
-    escape = FALSE,
-    longtable = TRUE
-    ) |>
-  kable_styling(c('striped'),
-                latex_options = c('HOLD_position', 'repeat_header')
-                )
+make.table(dat_temp)
 ```
 
 {{< pagebreak >}}
