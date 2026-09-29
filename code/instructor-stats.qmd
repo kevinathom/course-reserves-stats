@@ -138,7 +138,7 @@ term_max <- paste(dat_temp$Course.term[dat_temp$Event.date == max(dat_temp$Event
                   dat_temp$Course.year[dat_temp$Event.date == max(dat_temp$Event.date)][1])
 ```
 
-These data cover courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`. They include only courses that used course reserves.
+This report covers courses from `{r} if (term_max == term_min) term_min else paste(term_min, "through", term_max)`. It includes only courses that had course reserves views or downloads.
 
 ## Summary by item
 
@@ -187,7 +187,7 @@ dat_temp$Title <- ttl_trunc(dat_temp)
 make.table(dat_temp)
 ```
 
-Out of all items, `{r} ct_under_1` `{r} if (ct_under_1 == 1) "item" else "items"` averaged below one view per student.
+Out of `{r} nrow(dat_rate)` `{r} if (nrow(dat_rate) == 1) "item" else "items"`, `{r} ct_under_1` `{r} if (ct_under_1 == 1) "item" else "items"` averaged below one view per student.
 
 ```{r}
 #| include: !expr show_ct_under_1
@@ -209,9 +209,8 @@ make.table(dat_temp)
 dat_temp <- drop_na(dat) |>
   group_by(Course.year, Course.term) |>
   summarize(Courses = length(unique(Course.code)),
+            'Median\nenrollment' = median(Course.enrollment),
             'Viewed\nitems' = length(unique(Citation)),
-            'Minimum\nenrollment' = min(Course.enrollment),
-            'Maximum\nenrollment' = max(Course.enrollment),
             Views = sum(Total.views)
             ) |>
   arrange(Course.year, Course.term)
